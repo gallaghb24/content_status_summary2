@@ -17,7 +17,7 @@ st.markdown("""
 6. You're now ready — upload the `.xlsx` file using the uploader below.
 """)
 
-uploaded_file = st.file_uploader("Upload your Production_Lines.xlsx file", type=["xlsx"])
+uploaded_file = st.file_uploader("Choose a file to upload", type=["xlsx"])
 
 if uploaded_file:
     # Load data
