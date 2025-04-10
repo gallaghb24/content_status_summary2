@@ -128,7 +128,7 @@ if uploaded_file:
         st.markdown("<div style='margin-top: 1em; text-align: center;'>", unsafe_allow_html=True)
         st.markdown("<div style='margin-top: 1.5em; text-align: center;'>", unsafe_allow_html=True)
 st.download_button(
-    label="✅ Done! Download Report",
+    "✅ Done! Download Report",
             "📥 Download Report",
             output,
             file_name=filename,
