@@ -6,8 +6,7 @@ from datetime import datetime
 st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
 st.title("📊 Event Artwork Status Report")
 
-st.markdown("""
-### 📥 How to prepare your file for the Event Artwork Status Report
+st.markdown("""\n### 📥 Instructions
 
 1. Go to the [**Production Lines report**](https://superdrug.aswmediacentre.com/Reports/Reports/CustomReport?reportId=2) in Media Centre.  
 2. Type the **exact name of the Event** you want to report on (e.g. *Event 6 2025*), or choose a **date range** if you'd like to include multiple Events.  
@@ -109,4 +108,6 @@ if uploaded_file:
                 worksheet.set_column(i, i, max_len)
 
         output.seek(0)
-        st.download_button("📥 Download Report", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+        st.markdown("<div style='margin-top: 1em; text-align: center;'>", unsafe_allow_html=True)
+st.download_button("📥 Download Report", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=False)
+st.markdown("</div>", unsafe_allow_html=True)
