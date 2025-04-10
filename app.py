@@ -61,32 +61,30 @@ if uploaded_file:
         excluded_from_display = set(existing_brief_statuses + existing_amends_statuses)
 
         core_cols = ['project_ref', 'project_description', 'project_owner', 'event_name']
-        ordered_cols = core_cols + [
-            'awaiting_brief', 'awaiting_artwork', 'awaiting_artwork_amends',
-            'itg_approve_artwork', 'approve_artwork', 'not_applicable',
-            'completed', 'no_of_lines', '%_completed'
-        ]
-        additional_cols = [col for col in pivot.columns if col not in ordered_cols and col not in excluded_from_display and pivot[col].sum() > 0]
+
         defined_status_order = [
-    'awaiting_brief',
-    'awaiting_artwork',
-    'awaiting_artwork_amends',
-    'itg_approve_artwork',
-    'approve_artwork',
-    'awaiting_artwork_submission',
-    'awaiting_production_ready',
-    'itg_rejected_briefs',
-    'itg_agency_modifications',
-    'agency_modifications',
-    'not_applicable',
-    'completed'
-]
+            'awaiting_brief',
+            'awaiting_artwork',
+            'awaiting_artwork_amends',
+            'itg_approve_artwork',
+            'approve_artwork',
+            'awaiting_artwork_submission',
+            'awaiting_production_ready',
+            'itg_rejected_briefs',
+            'itg_agency_modifications',
+            'agency_modifications',
+            'not_applicable',
+            'completed'
+        ]
 
-status_cols_in_data = [col for col in defined_status_order if col in pivot.columns]
-extra_status_cols = [col for col in pivot.columns if col not in core_cols + status_cols_in_data + list(excluded_from_display) + ['no_of_lines', '%_completed']]
+        status_cols_in_data = [col for col in defined_status_order if col in pivot.columns]
+        extra_status_cols = [
+            col for col in pivot.columns
+            if col not in core_cols + status_cols_in_data + list(excluded_from_display) + ['no_of_lines', '%_completed']
+        ]
 
-ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_cols
-final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
+        ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_cols
+        final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
         st.success("✅ Done!")
 
@@ -126,6 +124,13 @@ final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].cop
                 worksheet.set_column(i, i, max_len)
 
         output.seek(0)
+
         st.markdown("<div style='margin-top: 1em; text-align: center;'>", unsafe_allow_html=True)
-st.download_button("📥 Download Report", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=False)
-st.markdown("</div>", unsafe_allow_html=True)
+        st.download_button(
+            "📥 Download Report",
+            output,
+            file_name=filename,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=False
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
