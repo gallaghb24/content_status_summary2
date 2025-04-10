@@ -23,7 +23,7 @@ if uploaded_file:
               .reset_index()
         )
 
-        pivot = status_counts.pivot_table(
+        full_pivot = status_counts.pivot_table(
             index=['project_ref', 'project_description', 'project_owner', 'event_name'],
             columns='content_brief_status',
             values='line_count',
@@ -31,8 +31,11 @@ if uploaded_file:
         ).reset_index()
 
         # Standardise column names again after pivot
-        pivot.columns.name = None
-        pivot.columns = [str(col).strip().replace(" ", "_").lower() for col in pivot.columns]
+        full_pivot.columns.name = None
+        full_pivot.columns = [str(col).strip().replace(" ", "_").lower() for col in full_pivot.columns]
+
+        # Work on a copy for display summary
+        pivot = full_pivot.copy()
 
         # Define merged status groups
         awaiting_brief_statuses = [
@@ -72,9 +75,10 @@ if uploaded_file:
 
         final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
-        # Add check column: sum of ALL raw statuses (including excluded) == no_of_lines
-        all_raw_status_cols = [col for col in pivot.columns if col not in core_cols + ['no_of_lines', '%_completed', 'awaiting_brief', 'awaiting_artwork_amends']]
-        final_summary['check_total'] = pivot[all_raw_status_cols].sum(axis=1)
+        # Add check column using ALL numeric status columns from the full unfiltered pivot
+        status_cols = [col for col in full_pivot.columns if col not in core_cols and full_pivot[col].dtype in [int, float]]
+        check_totals = full_pivot[status_cols].sum(axis=1)
+        final_summary['check_total'] = check_totals.values
         final_summary['check_passes'] = final_summary['check_total'] == final_summary['no_of_lines']
 
         st.success("✅ Summary generated!")
