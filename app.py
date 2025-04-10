@@ -86,8 +86,6 @@ if uploaded_file:
         ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_cols
         final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
-        
-
         formatted_headers = [
             "ITG Approve Artwork" if col == "itg_approve_artwork"
             else "Total Lines" if col == "no_of_lines"
@@ -125,11 +123,9 @@ if uploaded_file:
 
         output.seek(0)
 
-        st.markdown("<div style='margin-top: 1em; text-align: center;'>", unsafe_allow_html=True)
         st.markdown("<div style='margin-top: 1.5em; text-align: center;'>", unsafe_allow_html=True)
-st.download_button(
-    "✅ Done! Download Report",
-            "📥 Download Report",
+        st.download_button(
+            "✅ Done! Download Report",
             output,
             file_name=filename,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
