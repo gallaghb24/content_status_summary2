@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Content Brief Summary", layout="wide")
-st.title("📋 Content Brief Status Summary")
+st.set_page_config(page_title="Content Status Summary", layout="wide")
+st.title("📊 Content Status Summary")
 
 uploaded_file = st.file_uploader("Upload your Production_Lines.xlsx file", type=["xlsx"])
 
