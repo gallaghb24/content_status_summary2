@@ -20,7 +20,6 @@ st.markdown("""
 uploaded_file = st.file_uploader("Choose a file to upload", type=["xlsx"])
 
 if uploaded_file:
-    # Load data
     try:
         df = pd.read_excel(uploaded_file, sheet_name='general_report', header=1)
     except Exception as e:
@@ -28,7 +27,6 @@ if uploaded_file:
     else:
         df.columns = [str(col).strip().replace(" ", "_").lower() for col in df.columns]
 
-        # Group and count status lines
         status_counts = (
             df.groupby(['project_ref', 'project_description', 'project_owner', 'event_name', 'content_brief_status'])
               .agg(line_count=('brief_ref', 'count'))
@@ -74,21 +72,17 @@ if uploaded_file:
         final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
         st.success("✅ Done!")
-        st.dataframe(final_summary, use_container_width=True)
 
-        # Format headers: convert to Proper Case and remove underscores
         formatted_headers = [
-    "ITG Approve Artwork" if col == "itg_approve_artwork"
-    else "Total Lines" if col == "no_of_lines"
-    else col.replace("_", " ").title()
-    for col in final_summary.columns
-]
+            "ITG Approve Artwork" if col == "itg_approve_artwork"
+            else "Total Lines" if col == "no_of_lines"
+            else col.replace("_", " ").title()
+            for col in final_summary.columns
+        ]
 
-        # Filename with timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"event_artwork_status_report-{timestamp}.xlsx"
 
-        # Create Excel with formatting and raw data sheet
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             final_summary.to_excel(writer, index=False, sheet_name='Summary', header=formatted_headers)
@@ -97,19 +91,22 @@ if uploaded_file:
             workbook = writer.book
             worksheet = writer.sheets['Summary']
 
-            # Apply conditional formatting for % Completed
-            percent_col_index = formatted_headers.index('% Completed')
-            worksheet.conditional_format(1, percent_col_index, len(final_summary), percent_col_index, {
-                'type': '3_color_scale',
-                'min_color': "#F8696B",  # Red
-                'mid_color': "#FFEB84",  # Yellow/Orange
-                'max_color': "#63BE7B"   # Green
-            })
+            if '% Completed' in formatted_headers:
+                percent_col_index = formatted_headers.index('% Completed')
+                worksheet.conditional_format(1, percent_col_index, len(final_summary), percent_col_index, {
+                    'type': '3_color_scale',
+                    'min_color': "#F8696B",
+                    'mid_color': "#FFEB84",
+                    'max_color': "#63BE7B"
+                })
 
-            # Auto column widths
             for i, col in enumerate(formatted_headers):
-                max_len = max(final_summary[col.lower().replace(" ", "_")].astype(str).map(len).max(), len(col)) + 2
+                raw_col_key = col.replace(" ", "_").lower()
+                if raw_col_key in final_summary.columns:
+                    max_len = max(final_summary[raw_col_key].astype(str).map(len).max(), len(col)) + 2
+                else:
+                    max_len = len(col) + 2
                 worksheet.set_column(i, i, max_len)
 
         output.seek(0)
-        st.download_button("📥 Download Report", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        st.download_button("📥 Download Report", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
