@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 
-st.set_page_config(page_title="Content Status Summary", layout="wide")
-st.title("📊 Content Status Summary")
+st.set_page_config(page_title="Content Brief Summary", layout="wide")
+st.title("📋 Content Brief Summary Generator")
 
 uploaded_file = st.file_uploader("Upload your Production_Lines.xlsx file", type=["xlsx"])
 
@@ -33,40 +34,46 @@ if uploaded_file:
         pivot.columns.name = None
         pivot.columns = [str(col).strip().replace(" ", "_").lower() for col in pivot.columns]
 
-        # Calculate merged columns
-        pivot['awaiting_brief'] = (
-            pivot.get('draft', 0) +
-            pivot.get('saved', 0) +
-            pivot.get('awaiting_agency_briefs', 0)
-        )
-
-        pivot['awaiting_artwork_amends'] = (
-            pivot.get('awaiting_artwork_amends', 0) +
-            pivot.get('client_rejected_artwork', 0)
-        )
-
-        pivot['no_of_lines'] = pivot.drop(
-            columns=['project_ref', 'project_description', 'project_owner', 'event_name', 'completed'], errors='ignore'
-        ).sum(axis=1) + pivot.get('completed', 0)
-
-        pivot['%_completed'] = (
-            (pivot.get('completed', 0) / pivot['no_of_lines']) * 100
-        ).round(0).astype(int).astype(str) + '%'
-
-        # Final column order
-        columns_to_display = [
-            'project_ref', 'project_description', 'project_owner', 'event_name', 'no_of_lines',
-            'awaiting_brief', 'awaiting_artwork', 'awaiting_artwork_amends',
-            'itg_approve_artwork', 'approve_artwork', 'not_applicable',
-            'completed', '%_completed'
+        # Define merged status groups
+        awaiting_brief_statuses = [
+            'draft', 'saved', 'awaiting_agency_briefs'
+        ]
+        awaiting_amends_statuses = [
+            'awaiting_artwork_amends', 'client_rejected_artwork',
+            'itg_rejected_artwork', 'rejected_artwork'
         ]
 
-        columns_to_display = [col for col in columns_to_display if col in pivot.columns]
-        final_summary = pivot[columns_to_display]
+        # Add merged columns
+        pivot['awaiting_brief'] = pivot[awaiting_brief_statuses].sum(axis=1, min_count=1)
+        pivot['awaiting_artwork_amends'] = pivot[awaiting_amends_statuses].sum(axis=1, min_count=1)
+
+        # Recalculate number of lines directly from source
+        line_counts = df.groupby('project_ref')['brief_ref'].count().to_dict()
+        pivot['no_of_lines'] = pivot['project_ref'].map(line_counts)
+
+        # Calculate % completed
+        pivot['%_completed'] = ((pivot.get('completed', 0) / pivot['no_of_lines']) * 100).round(0).astype(int).astype(str) + '%'
+
+        # Remove columns where all values are 0 (excluding key columns)
+        core_cols = ['project_ref', 'project_description', 'project_owner', 'event_name']
+        known_summary_cols = core_cols + ['no_of_lines', 'completed', '%_completed', 'awaiting_brief', 'awaiting_artwork_amends']
+        non_zero_cols = pivot.loc[:, (pivot != 0).any(axis=0)].columns.tolist()
+        display_cols = [col for col in pivot.columns if col in known_summary_cols or col in non_zero_cols]
+
+        final_summary = pivot[display_cols]
+
+        # Add check column: sum of status columns should equal number of lines
+        status_cols = [col for col in final_summary.columns if col not in core_cols + ['no_of_lines', '%_completed'] and final_summary[col].dtype in [int, float]]
+        final_summary['check_total'] = final_summary[status_cols].sum(axis=1)
+        final_summary['check_passes'] = final_summary['check_total'] == final_summary['no_of_lines']
 
         st.success("✅ Summary generated!")
         st.dataframe(final_summary, use_container_width=True)
 
-        # Option to download the result
-        csv = final_summary.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Summary as CSV", csv, "summary.csv", "text/csv")
+        # Create an XLSX download
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            final_summary.to_excel(writer, index=False, sheet_name='Summary')
+        output.seek(0)
+
+        st.download_button("📥 Download Summary as XLSX", output, "summary.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
