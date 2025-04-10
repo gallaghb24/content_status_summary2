@@ -77,7 +77,12 @@ if uploaded_file:
         st.dataframe(final_summary, use_container_width=True)
 
         # Format headers: convert to Proper Case and remove underscores
-        formatted_headers = [col.replace("_", " ").title() for col in final_summary.columns]
+        formatted_headers = [
+    "ITG Approve Artwork" if col == "itg_approve_artwork"
+    else "Total Lines" if col == "no_of_lines"
+    else col.replace("_", " ").title()
+    for col in final_summary.columns
+]
 
         # Filename with timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
