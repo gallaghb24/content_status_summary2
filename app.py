@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.set_page_config(page_title="Content Brief Summary", layout="wide")
-st.title("📋 Content Brief Summary Generator")
+st.set_page_config(page_title="Content Status Summary", layout="wide")
+st.title("📊 Content Status Summary")
 
 uploaded_file = st.file_uploader("Upload your Production_Lines.xlsx file", type=["xlsx"])
 
@@ -67,10 +67,12 @@ if uploaded_file:
         # Format headers: convert to Proper Case and remove underscores
         formatted_headers = [col.replace("_", " ").title() for col in final_summary.columns]
 
-        # Create Excel with formatting
+        # Create Excel with formatting and raw data sheet
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             final_summary.to_excel(writer, index=False, sheet_name='Summary', header=formatted_headers)
+            df.to_excel(writer, index=False, sheet_name='Raw Data')
+
             workbook = writer.book
             worksheet = writer.sheets['Summary']
 
