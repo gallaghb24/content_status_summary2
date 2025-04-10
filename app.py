@@ -43,9 +43,12 @@ if uploaded_file:
             'itg_rejected_artwork', 'rejected_artwork'
         ]
 
-        # Add merged columns
-        pivot['awaiting_brief'] = pivot[awaiting_brief_statuses].sum(axis=1, min_count=1)
-        pivot['awaiting_artwork_amends'] = pivot[awaiting_amends_statuses].sum(axis=1, min_count=1)
+        # Add merged columns only from existing status columns
+        existing_brief_statuses = [col for col in awaiting_brief_statuses if col in pivot.columns]
+        pivot['awaiting_brief'] = pivot[existing_brief_statuses].sum(axis=1, min_count=1)
+
+        existing_amends_statuses = [col for col in awaiting_amends_statuses if col in pivot.columns]
+        pivot['awaiting_artwork_amends'] = pivot[existing_amends_statuses].sum(axis=1, min_count=1)
 
         # Recalculate number of lines directly from source
         line_counts = df.groupby('project_ref')['brief_ref'].count().to_dict()
