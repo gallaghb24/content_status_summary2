@@ -1,9 +1,21 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 
-st.set_page_config(page_title="Content Status Summary", layout="wide")
-st.title("📊 Content Status Summary")
+st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
+st.title("📊 Event Artwork Status Report")
+
+st.markdown("""
+### 📥 How to prepare your file for the Event Artwork Status Report
+
+1. Go to the [**Production Lines report**](https://superdrug.aswmediacentre.com/Reports/Reports/CustomReport?reportId=2) in Media Centre.  
+2. Select the **Event** you want to report on, or choose a **date range** if you'd like to include multiple Events.  
+3. Click **Search** to generate the results.  
+4. Once the data loads, click the **Excel icon** to export the file. Then click **Export** on the pop-up window.  
+5. When the file has downloaded, **open it** and then **Save As** an `.xlsx` Excel file (not `.xls` or `.csv`).  
+6. You're now ready — upload the `.xlsx` file using the uploader below.
+""")
 
 uploaded_file = st.file_uploader("Upload your Production_Lines.xlsx file", type=["xlsx"])
 
@@ -61,11 +73,15 @@ if uploaded_file:
 
         final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
-        st.success("✅ Summary generated!")
+        st.success("✅ Done!")
         st.dataframe(final_summary, use_container_width=True)
 
         # Format headers: convert to Proper Case and remove underscores
         formatted_headers = [col.replace("_", " ").title() for col in final_summary.columns]
+
+        # Filename with timestamp
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"event_artwork_status_report-{timestamp}.xlsx"
 
         # Create Excel with formatting and raw data sheet
         output = BytesIO()
@@ -91,4 +107,4 @@ if uploaded_file:
                 worksheet.set_column(i, i, max_len)
 
         output.seek(0)
-        st.download_button("📥 Download Summary as XLSX", output, "summary.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        st.download_button("📥 Download Report", output, file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
