@@ -1,4 +1,18 @@
 import streamlit as st
+
+st.markdown(
+    """
+    <style>
+    h1, h2, h3, h4, h5, h6 {
+        visibility: visible;
+    }
+    .stMarkdown .css-1aumxhk a {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
