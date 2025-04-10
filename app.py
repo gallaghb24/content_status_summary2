@@ -30,40 +30,26 @@ if uploaded_file:
             fill_value=0
         ).reset_index()
 
-        # Standardise column names again after pivot
         full_pivot.columns.name = None
         full_pivot.columns = [str(col).strip().replace(" ", "_").lower() for col in full_pivot.columns]
-
-        # Work on a copy for display summary
         pivot = full_pivot.copy()
 
-        # Define merged status groups
-        awaiting_brief_statuses = [
-            'draft', 'saved', 'awaiting_agency_briefs'
-        ]
-        awaiting_amends_statuses = [
-            'awaiting_artwork_amends', 'client_rejected_artwork',
-            'itg_rejected_artwork', 'rejected_artwork'
-        ]
+        awaiting_brief_statuses = ['draft', 'saved', 'awaiting_agency_briefs']
+        awaiting_amends_statuses = ['awaiting_artwork_amends', 'client_rejected_artwork', 'itg_rejected_artwork', 'rejected_artwork']
 
-        # Add merged columns only from existing status columns
         existing_brief_statuses = [col for col in awaiting_brief_statuses if col in pivot.columns]
         pivot['awaiting_brief'] = pivot[existing_brief_statuses].sum(axis=1, min_count=1)
 
         existing_amends_statuses = [col for col in awaiting_amends_statuses if col in pivot.columns]
         pivot['awaiting_artwork_amends'] = pivot[existing_amends_statuses].sum(axis=1, min_count=1)
 
-        # Recalculate number of lines directly from source
         line_counts = df.groupby('project_ref')['brief_ref'].count().to_dict()
         pivot['no_of_lines'] = pivot['project_ref'].map(line_counts)
 
-        # Calculate % completed
         pivot['%_completed'] = ((pivot.get('completed', 0) / pivot['no_of_lines']) * 100).round(0).astype(int).astype(str) + '%'
 
-        # Track columns used for merging to exclude from display but not from check
         excluded_from_display = set(existing_brief_statuses + existing_amends_statuses)
 
-        # Build display columns
         core_cols = ['project_ref', 'project_description', 'project_owner', 'event_name']
         ordered_cols = core_cols + [
             'awaiting_brief', 'awaiting_artwork', 'awaiting_artwork_amends',
@@ -75,19 +61,32 @@ if uploaded_file:
 
         final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
-        # Add check column using ALL numeric status columns from the full unfiltered pivot
-        status_cols = [col for col in full_pivot.columns if col not in core_cols and full_pivot[col].dtype in [int, float]]
-        check_totals = full_pivot[status_cols].sum(axis=1)
-        final_summary['check_total'] = check_totals.values
-        final_summary['check_passes'] = final_summary['check_total'] == final_summary['no_of_lines']
-
         st.success("✅ Summary generated!")
         st.dataframe(final_summary, use_container_width=True)
 
-        # Create an XLSX download
+        # Format headers: convert to Proper Case and remove underscores
+        formatted_headers = [col.replace("_", " ").title() for col in final_summary.columns]
+
+        # Create Excel with formatting
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            final_summary.to_excel(writer, index=False, sheet_name='Summary')
-        output.seek(0)
+            final_summary.to_excel(writer, index=False, sheet_name='Summary', header=formatted_headers)
+            workbook = writer.book
+            worksheet = writer.sheets['Summary']
 
+            # Apply conditional formatting for % Completed
+            percent_col_index = formatted_headers.index('% Completed')
+            worksheet.conditional_format(1, percent_col_index, len(final_summary), percent_col_index, {
+                'type': '3_color_scale',
+                'min_color': "#F8696B",  # Red
+                'mid_color': "#FFEB84",  # Yellow/Orange
+                'max_color': "#63BE7B"   # Green
+            })
+
+            # Auto column widths
+            for i, col in enumerate(formatted_headers):
+                max_len = max(final_summary[col.lower().replace(" ", "_")].astype(str).map(len).max(), len(col)) + 2
+                worksheet.set_column(i, i, max_len)
+
+        output.seek(0)
         st.download_button("📥 Download Summary as XLSX", output, "summary.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
