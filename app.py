@@ -87,7 +87,7 @@ extra_status_cols = [col for col in pivot.columns if col not in core_cols + stat
 
 ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_cols
 
-        final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
+            final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
         st.success("✅ Done!")
 
