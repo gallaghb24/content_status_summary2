@@ -57,13 +57,23 @@ if uploaded_file:
         # Calculate % completed
         pivot['%_completed'] = ((pivot.get('completed', 0) / pivot['no_of_lines']) * 100).round(0).astype(int).astype(str) + '%'
 
-        # Remove columns where all values are 0 (excluding key columns)
-        core_cols = ['project_ref', 'project_description', 'project_owner', 'event_name']
-        known_summary_cols = core_cols + ['no_of_lines', 'completed', '%_completed', 'awaiting_brief', 'awaiting_artwork_amends']
-        non_zero_cols = pivot.loc[:, (pivot != 0).any(axis=0)].columns.tolist()
-        display_cols = [col for col in pivot.columns if col in known_summary_cols or col in non_zero_cols]
+        # Remove merged source columns to avoid double counting
+        columns_to_remove = set(existing_brief_statuses + existing_amends_statuses)
+        pivot = pivot.drop(columns=[col for col in columns_to_remove if col in pivot.columns])
 
-        final_summary = pivot[display_cols]
+        # Clean up final columns
+        core_cols = ['project_ref', 'project_description', 'project_owner', 'event_name']
+        ordered_cols = core_cols + [
+            'awaiting_brief', 'awaiting_artwork', 'awaiting_artwork_amends',
+            'itg_approve_artwork', 'approve_artwork', 'not_applicable',
+            'completed', 'no_of_lines', '%_completed'
+        ]
+
+        # Add any additional columns with real data
+        ordered_cols += [col for col in pivot.columns if col not in ordered_cols and pivot[col].sum() > 0]
+
+        # Filter only columns that actually exist
+        final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]]
 
         # Add check column: sum of status columns should equal number of lines
         status_cols = [col for col in final_summary.columns if col not in core_cols + ['no_of_lines', '%_completed'] and final_summary[col].dtype in [int, float]]
