@@ -6,7 +6,8 @@ from datetime import datetime
 st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
 st.title("📊 Event Artwork Status Report")
 
-st.markdown("""\n### 📥 Instructions
+st.markdown("""
+### 📥 Instructions
 
 1. Go to the [**Production Lines report**](https://superdrug.aswmediacentre.com/Reports/Reports/CustomReport?reportId=2) in Media Centre.  
 2. Type the **exact name of the Event** you want to report on (e.g. *Event 6 2025*), or choose a **date range** if you'd like to include multiple Events.  
@@ -66,7 +67,25 @@ if uploaded_file:
             'completed', 'no_of_lines', '%_completed'
         ]
         additional_cols = [col for col in pivot.columns if col not in ordered_cols and col not in excluded_from_display and pivot[col].sum() > 0]
-        ordered_cols += additional_cols
+        defined_status_order = [
+    'awaiting_brief',
+    'awaiting_artwork',
+    'awaiting_artwork_amends',
+    'itg_approve_artwork',
+    'approve_artwork',
+    'awaiting_artwork_submission',
+    'awaiting_production_ready',
+    'itg_rejected_briefs',
+    'itg_agency_modifications',
+    'agency_modifications',
+    'not_applicable',
+    'completed'
+]
+
+status_cols_in_data = [col for col in defined_status_order if col in pivot.columns]
+extra_status_cols = [col for col in pivot.columns if col not in core_cols + status_cols_in_data + list(excluded_from_display) + ['no_of_lines', '%_completed']]
+
+ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_cols
 
         final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
