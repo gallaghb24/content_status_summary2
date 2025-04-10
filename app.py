@@ -85,9 +85,7 @@ if uploaded_file:
 status_cols_in_data = [col for col in defined_status_order if col in pivot.columns]
 extra_status_cols = [col for col in pivot.columns if col not in core_cols + status_cols_in_data + list(excluded_from_display) + ['no_of_lines', '%_completed']]
 
-ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_cols
-
-            final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
+ordered_cols = core_cols + status_cols_in_data + ['no_of_lines', '%_completed'] + extra_status_colsfinal_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
         st.success("✅ Done!")
 
