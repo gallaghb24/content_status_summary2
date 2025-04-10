@@ -57,27 +57,24 @@ if uploaded_file:
         # Calculate % completed
         pivot['%_completed'] = ((pivot.get('completed', 0) / pivot['no_of_lines']) * 100).round(0).astype(int).astype(str) + '%'
 
-        # Remove merged source columns to avoid double counting
-        columns_to_remove = set(existing_brief_statuses + existing_amends_statuses)
-        pivot = pivot.drop(columns=[col for col in columns_to_remove if col in pivot.columns])
+        # Track columns used for merging to exclude from display but not from check
+        excluded_from_display = set(existing_brief_statuses + existing_amends_statuses)
 
-        # Clean up final columns
+        # Build display columns
         core_cols = ['project_ref', 'project_description', 'project_owner', 'event_name']
         ordered_cols = core_cols + [
             'awaiting_brief', 'awaiting_artwork', 'awaiting_artwork_amends',
             'itg_approve_artwork', 'approve_artwork', 'not_applicable',
             'completed', 'no_of_lines', '%_completed'
         ]
+        additional_cols = [col for col in pivot.columns if col not in ordered_cols and col not in excluded_from_display and pivot[col].sum() > 0]
+        ordered_cols += additional_cols
 
-        # Add any additional columns with real data
-        ordered_cols += [col for col in pivot.columns if col not in ordered_cols and pivot[col].sum() > 0]
+        final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]].copy()
 
-        # Filter only columns that actually exist
-        final_summary = pivot[[col for col in ordered_cols if col in pivot.columns]]
-
-        # Add check column: sum of status columns should equal number of lines
-        status_cols = [col for col in final_summary.columns if col not in core_cols + ['no_of_lines', '%_completed'] and final_summary[col].dtype in [int, float]]
-        final_summary['check_total'] = final_summary[status_cols].sum(axis=1)
+        # Add check column: sum of ALL raw statuses (including excluded) == no_of_lines
+        all_raw_status_cols = [col for col in pivot.columns if col not in core_cols + ['no_of_lines', '%_completed', 'awaiting_brief', 'awaiting_artwork_amends']]
+        final_summary['check_total'] = pivot[all_raw_status_cols].sum(axis=1)
         final_summary['check_passes'] = final_summary['check_total'] == final_summary['no_of_lines']
 
         st.success("✅ Summary generated!")
