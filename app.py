@@ -118,8 +118,7 @@ if uploaded_file:
             # Add overall % formula below the table
             total_rows = len(final_summary) + 1  # account for header
             col_map = {h: i for i, h in enumerate(formatted_headers)}
-overall_format = workbook.add_format({"bold": True, "bg_color": "#F0F0F0"})
-            if 'Total Lines' in col_map and '% Completed' in col_map:
+overall_format = workbook.add_format({"bold": True, "bg_color": "#F0F0F0"})if 'Total Lines' in col_map and '% Completed' in col_map:
                 total_col = col_map['Total Lines']
                 percent_col = col_map['% Completed']
                 worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed', overall_format)
