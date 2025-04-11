@@ -15,23 +15,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown(
-    """
-    <style>
-    h1, h2, h3, h4, h5, h6 {
-        visibility: visible;
-    }
-    .stMarkdown .css-1aumxhk a {
-        display: none;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
-
 
 st.title("📊 Event Artwork Status Report")
 
@@ -128,6 +114,17 @@ if uploaded_file:
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             final_summary.to_excel(writer, index=False, sheet_name='Summary', header=formatted_headers)
+
+            # Add overall % formula below the table
+            total_rows = len(final_summary) + 1  # account for header
+            col_map = {h: i for i, h in enumerate(formatted_headers)}
+            if 'Total Lines' in col_map and '% Completed' in col_map:
+                total_col = col_map['Total Lines']
+                percent_col = col_map['% Completed']
+                worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed')
+                formula = f"=ROUND(SUMPRODUCT({chr(65+percent_col)}2:{chr(65+percent_col)}{total_rows},{chr(65+total_col)}2:{chr(65+total_col)}{total_rows})/SUM({chr(65+total_col)}2:{chr(65+total_col)}{total_rows}), 0) & \"%\""
+                worksheet.write_formula(total_rows + 1, percent_col, formula, workbook.add_format({"bold": True, "bg_color": "#F0F0F0"}))
+                worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed', workbook.add_format({"bold": True, "bg_color": "#F0F0F0"}))
             df.to_excel(writer, index=False, sheet_name='Raw Data')
 
             workbook = writer.book
