@@ -144,11 +144,11 @@ if uploaded_file:
             if 'Total Lines' in col_map and '% Completed' in col_map:
                 total_col = col_map['Total Lines']
                 percent_col = col_map['Completed']
-                worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed', overall_format)
+                worksheet.write(total_rows + 1, 11, 'Overall % Completed', overall_format)
                 col_letter_percent = chr(65 + percent_col)
                 col_letter_total = chr(65 + total_col)
                 formula = f"=ROUND(SUM({col_letter_percent}2:{col_letter_percent}{total_rows})/SUM({col_letter_total}2:{col_letter_total}{total_rows})*100, 0) & \"%\""
-                worksheet.write_formula(total_rows + 1, percent_col, formula, overall_format)
+                worksheet.write_formula(total_rows + 1, 12, formula, overall_format)
 
         output.seek(0)
 
