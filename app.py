@@ -118,12 +118,13 @@ if uploaded_file:
             # Add overall % formula below the table
             total_rows = len(final_summary) + 1  # account for header
             col_map = {h: i for i, h in enumerate(formatted_headers)}
+overall_format = workbook.add_format({"bold": True, "bg_color": "#F0F0F0"})
             if 'Total Lines' in col_map and '% Completed' in col_map:
                 total_col = col_map['Total Lines']
                 percent_col = col_map['% Completed']
-                worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed', workbook.add_format({"bold": True, "bg_color": "#F0F0F0"}))
+                worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed', overall_format)
                 formula = f"=ROUND(SUMPRODUCT({chr(65+percent_col)}2:{chr(65+percent_col)}{total_rows},{chr(65+total_col)}2:{chr(65+total_col)}{total_rows})/SUM({chr(65+total_col)}2:{chr(65+total_col)}{total_rows}), 0) & \"%\""
-                worksheet.write_formula(total_rows + 1, percent_col, formula, workbook.add_format({"bold": True, "bg_color": "#F0F0F0"}))
+                worksheet.write_formula(total_rows + 1, percent_col, formula, overall_format)
                 worksheet.write(total_rows + 1, percent_col - 1, 'Overall % Completed', workbook.add_format({"bold": True, "bg_color": "#F0F0F0"}))
             df.to_excel(writer, index=False, sheet_name='Raw Data')
 
