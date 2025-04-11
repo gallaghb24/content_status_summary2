@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
 
 st.markdown(
     """
@@ -31,7 +32,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 
-st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
+
 st.title("📊 Event Artwork Status Report")
 
 st.markdown("""
