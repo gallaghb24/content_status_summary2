@@ -1,5 +1,4 @@
 import streamlit as st
-st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
 
 st.markdown(
     """
@@ -32,6 +31,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 
+st.set_page_config(page_title="Event Artwork Status Report", layout="wide")
 st.title("📊 Event Artwork Status Report")
 
 st.markdown("""
@@ -40,7 +40,7 @@ st.markdown("""
 1. Go to the [**Production Lines report**](https://superdrug.aswmediacentre.com/Reports/Reports/CustomReport?reportId=2) in Media Centre.  
 2. Type the **exact name of the Event** you want to report on (e.g. *Event 6 2025*), or choose a **date range** if you'd like to include multiple Events.  
 3. Click **Search** to generate the results.  
-4. Once the data loads, click the **Excel icon** to export the file. Then click **Export** on the pop-up window.  
+4. Once the data loads, click the **Excel icon** to export the file. Then leave it as HTML and click **Export** on the pop-up window.  
 5. When the file has downloaded, **open it** and then **Save As** an `.xlsx` Excel file (not `.xls` or `.csv`).  
 6. You're now ready — upload the `.xlsx` file using the uploader below.
 """)
